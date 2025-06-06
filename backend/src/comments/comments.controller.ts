@@ -17,12 +17,12 @@ export class CommentsController {
     @Body() createCommentDto: CreateCommentDto,
     @Request() req,
   ) {
-    return this.commentsService.create(+mangaId, createCommentDto, req.user.id);
+    return this.commentsService.create(mangaId, createCommentDto, req.user.id);
   }
 
   @Get(':mangaId')
   findAllByManga(@Param('mangaId') mangaId: string) {
-    return this.commentsService.findAllByManga(+mangaId);
+    return this.commentsService.findAllByManga(mangaId);
   }
 
   @Get('id/:id')

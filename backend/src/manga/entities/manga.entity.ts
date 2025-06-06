@@ -13,6 +13,9 @@ export class Manga {
   @PrimaryGeneratedColumn()
   id: number; // Internal ID
 
+  @Column({ type: 'varchar', length: 255, unique: true, nullable: true })
+  mangaDexId: string; // MangaDex ID (UUID)
+
   @Column({ type: 'varchar', length: 255 })
   title: string;
 

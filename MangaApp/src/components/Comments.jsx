@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+// import { useParams } from 'react-router-dom';
+// import axios from 'axios';
+import api from '../utils/axios'; // Import the configured axios instance
 
-export const Comments = () => {
-  const { mangaId } = useParams();
+export const Comments = ({ mangaId }) => {
+  // const { mangaId } = useParams();
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -14,12 +16,14 @@ export const Comments = () => {
 
   const fetchComments = async () => {
     try {
-      // TODO: Implement actual comments fetching logic
-      // For now, just get from localStorage
-      const mangaComments = JSON.parse(localStorage.getItem(`comments_${mangaId}`)) || [];
-      setComments(mangaComments);
+      if (mangaId) {
+        // Sử dụng instance 'api' và cung cấp chỉ đường dẫn endpoint tương đối
+        const response = await api.get(`/comments/${mangaId}`);
+        setComments(response.data);
+      }
       setIsLoading(false);
     } catch (err) {
+      console.error('Failed to load comments:', err); // Thêm log chi tiết lỗi
       setError('Failed to load comments');
       setIsLoading(false);
     }
@@ -27,28 +31,23 @@ export const Comments = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!newComment.trim()) return;
+    if (!newComment.trim() || !mangaId) {
+      setError('Comment content or Manga ID is missing.');
+      return;
+    }
 
     try {
-      const user = JSON.parse(localStorage.getItem('user'));
-      if (!user) {
-        setError('Please login to comment');
-        return;
-      }
+      // Sử dụng instance 'api' và cung cấp chỉ đường dẫn endpoint tương đối
+      await api.post(`/comments/${mangaId}`, {
+        content: newComment,
+      });
 
-      const comment = {
-        id: Date.now(),
-        text: newComment,
-        user: user.email,
-        timestamp: new Date().toISOString(),
-      };
-
-      const updatedComments = [...comments, comment];
-      localStorage.setItem(`comments_${mangaId}`, JSON.stringify(updatedComments));
-      setComments(updatedComments);
       setNewComment('');
       setError('');
+      fetchComments(); // Fetch comments again to update the list
+
     } catch (err) {
+      console.error('Failed to post comment:', err); // Thêm log chi tiết lỗi
       setError('Failed to post comment');
     }
   };
@@ -71,17 +70,17 @@ export const Comments = () => {
             {error}
           </div>
         )}
-        <div className="flex gap-4">
+        <div className="flex flex-col gap-4 items-center w-full">
           <textarea
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
             placeholder="Write a comment..."
             className="flex-1 p-3 rounded-md bg-stone-900 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            rows="3"
+            rows="5"
           />
           <button
             type="submit"
-            className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 self-end"
+            className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
           >
             Post
           </button>
@@ -98,12 +97,12 @@ export const Comments = () => {
               className="bg-stone-900 rounded-lg p-4"
             >
               <div className="flex justify-between items-start mb-2">
-                <span className="text-blue-400 font-medium">{comment.user}</span>
+                <span className="text-blue-400 font-medium">{comment.user?.username}</span>
                 <span className="text-gray-500 text-sm">
-                  {new Date(comment.timestamp).toLocaleDateString()}
+                  {new Date(comment.createdAt).toLocaleDateString()}
                 </span>
               </div>
-              <p className="text-white">{comment.text}</p>
+              <p className="text-white">{comment.content}</p>
             </div>
           ))
         )}

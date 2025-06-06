@@ -27,9 +27,12 @@ export const useLibraryAdd = (mangaId) => {
       // Kiểm tra library
       console.log('Making request to /bookmarks');
       const response = await api.get('/bookmarks');
-      console.log('Bookmarks response:', response.data);
-      const bookmarks = response.data;
-      setIsInLibrary(bookmarks.some(bookmark => bookmark.mangaId === mangaId));
+      console.log('Bookmarks response (MangaDex IDs):', response.data);
+      const bookmarkedMangaDexIds = response.data; // This should be an array of strings
+
+      // Correctly check if the current mangaId (string) is in the array of strings
+      setIsInLibrary(bookmarkedMangaDexIds.includes(mangaId));
+
       setIsLoading(false);
     } catch (error) {
       console.error('Error checking library:', error);
@@ -68,7 +71,10 @@ export const useLibraryAdd = (mangaId) => {
         console.log('Adding to library');
         await api.post('/bookmarks', { mangaId });
       }
-      setIsInLibrary(!isInLibrary);
+      // Sau khi thay đổi thành công, gọi lại checkLibrary để lấy trạng thái mới nhất từ backend
+      await checkLibrary();
+      // Optionally reset error after successful operation
+      setError(null);
     } catch (error) {
       console.error('Error updating library:', error);
       console.error('Error details:', {
@@ -81,17 +87,15 @@ export const useLibraryAdd = (mangaId) => {
       if (error.response?.status === 401) {
         console.log('Unauthorized access, marking as unauthenticated');
         setIsAuthenticated(false);
+        setError('Authentication failed. Please log in again.');
+      } else {
+        setError(error.response?.data?.message || 'Error updating library');
       }
-      setError(error.response?.data?.message || 'Error updating library');
     }
   };
 
   useEffect(() => {
     console.log('useLibraryAdd effect triggered with mangaId:', mangaId);
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    if (user.token) {
-      setIsAuthenticated(true);
-    }
     checkLibrary();
   }, [mangaId]);
 

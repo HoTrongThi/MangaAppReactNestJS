@@ -17,8 +17,8 @@ export class CommentsService {
     private userRepository: Repository<User>,
   ) {}
 
-  async create(mangaId: number, createCommentDto: CreateCommentDto, userId: number): Promise<Comment> {
-    const manga = await this.mangaRepository.findOne({ where: { id: mangaId } });
+  async create(mangaId: string, createCommentDto: CreateCommentDto, userId: number): Promise<Comment> {
+    const manga = await this.mangaRepository.findOne({ where: { mangaDexId: mangaId } });
     if (!manga) {
       throw new NotFoundException('Manga not found');
     }
@@ -37,9 +37,9 @@ export class CommentsService {
     return this.commentRepository.save(comment);
   }
 
-  async findAllByManga(mangaId: number): Promise<Comment[]> {
+  async findAllByManga(mangaId: string): Promise<Comment[]> {
     return this.commentRepository.find({
-      where: { manga: { id: mangaId } },
+      where: { manga: { mangaDexId: mangaId } },
       relations: ['user'],
       order: { createdAt: 'DESC' },
     });

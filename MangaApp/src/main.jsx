@@ -20,6 +20,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import "./index.css";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { LibraryPage } from './pages/LibraryPage';
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
@@ -42,6 +43,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
             <Route path="/admin/manga/new" element={<AddMangaForm />} />
             <Route path="/contributor" element={<ContributorPanel />} />
             <Route path="/contributor/manga/new" element={<ContributorAddMangaForm />} />
+            <Route path="/library" element={<LibraryPage />} />
           </Routes>
           <ToastContainer />
         </AuthProvider>

@@ -1,9 +1,9 @@
-import { IsNotEmpty, IsNumber } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 export class CreateBookmarkDto {
   @IsNotEmpty()
-  @IsNumber()
-  mangaId: number; // The ID of the manga to bookmark
+  @IsString()
+  mangaId: string; // Change type to string (MangaDex ID)
 
   // userId will typically be extracted from the JWT payload, not passed in the body
 } 
