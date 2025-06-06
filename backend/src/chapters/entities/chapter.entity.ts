@@ -1,5 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
 import { Manga } from '../../manga/entities/manga.entity';
+import { View } from '../../views/entities/view.entity';
 
 @Entity('chapters')
 export class Chapter {
@@ -36,4 +37,10 @@ export class Chapter {
   @ManyToOne(() => Manga, manga => manga.chapters)
   @JoinColumn({ name: 'manga_id' })
   manga: Manga;
+
+  @Column()
+  mangaId: number;
+
+  @OneToMany(() => View, view => view.chapter)
+  views: View[];
 } 

@@ -1,49 +1,32 @@
-import { IsString, IsNotEmpty, IsOptional, IsArray, IsNumber } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsArray } from 'class-validator';
 
 export class CreateMangaDto {
   @IsString()
   @IsNotEmpty()
-  mangaDexId: string;
+  title: string;
 
+  @IsString()
   @IsNotEmpty()
-  title: any; // JSON object for multilingual titles
-
-  @IsOptional()
-  description?: any; // JSON object for multilingual descriptions
+  description: string;
 
   @IsString()
-  @IsOptional()
-  coverFileName?: string;
+  @IsNotEmpty()
+  author: string;
 
   @IsString()
-  @IsOptional()
-  author?: string;
+  @IsNotEmpty()
+  status: string;
 
   @IsString()
-  @IsOptional()
-  artist?: string;
-
-  @IsString()
-  @IsOptional()
-  status?: string;
-
-  @IsString()
-  @IsOptional()
-  type?: string;
+  @IsNotEmpty()
+  coverFileName: string;
 
   @IsString()
   @IsOptional()
   source?: string;
 
-  @IsString()
-  @IsOptional()
-  source_id?: string;
-
-  @IsOptional()
-  metadata?: any;
-
   @IsArray()
-  @IsNumber({}, { each: true })
-  @IsOptional()
-  genreIds?: number[];
+  @IsString({ each: true })
+  @IsNotEmpty()
+  genres: string[];
 } 

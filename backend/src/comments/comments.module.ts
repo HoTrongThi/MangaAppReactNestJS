@@ -10,5 +10,6 @@ import { Manga } from '../manga/entities/manga.entity';
   imports: [TypeOrmModule.forFeature([Comment, User, Manga])],
   controllers: [CommentsController],
   providers: [CommentsService],
+  exports: [CommentsService]
 })
 export class CommentsModule {}

@@ -1,4 +1,4 @@
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+import { Injectable, CanActivate, ExecutionContext, Logger } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Observable } from 'rxjs';
 import { Role } from '../../users/entities/user.entity';
@@ -6,6 +6,8 @@ import { ROLES_KEY } from '../decorators/roles.decorator'; // We will create thi
 
 @Injectable()
 export class RolesGuard implements CanActivate {
+  private readonly logger = new Logger(RolesGuard.name);
+
   constructor(private reflector: Reflector) {}
 
   canActivate(
@@ -15,13 +17,26 @@ export class RolesGuard implements CanActivate {
       context.getHandler(),
       context.getClass(),
     ]);
+    
+    this.logger.debug(`Required roles: ${JSON.stringify(requiredRoles)}`);
+    
     if (!requiredRoles) {
-      return true; // If no roles are required, allow access
+      return true;
     }
 
     const { user } = context.switchToHttp().getRequest();
-    // Assuming user object with role is attached to request by JwtAuthGuard
-    // Check if user has at least one of the required roles
-    return requiredRoles.some((role) => user.role === role);
+    this.logger.debug(`User from request: ${JSON.stringify(user)}`);
+
+    if (!user || !user.role) {
+      this.logger.error('No user or role found in request');
+      return false;
+    }
+
+    const userRole = user.role;
+    const hasRole = requiredRoles.includes(userRole);
+    
+    this.logger.debug(`User role: ${userRole}, Required roles: ${requiredRoles}, Has role: ${hasRole}`);
+    
+    return hasRole;
   }
 } 

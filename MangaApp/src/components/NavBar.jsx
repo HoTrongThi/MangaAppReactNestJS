@@ -43,12 +43,23 @@ export const NavBar = () => {
         
         {user ? (
           <div className="flex items-center space-x-4">
+            <span className="text-white">
+              {user.username}
+            </span>
             {user.role === 'admin' && (
               <Link
                 to="/admin"
                 className="text-white hover:text-blue-400 transition-colors"
               >
-                Admin
+                Admin Panel
+              </Link>
+            )}
+            {user.role === 'contributor' && (
+              <Link
+                to="/contributor"
+                className="text-white hover:text-blue-400 transition-colors"
+              >
+                Contributor Panel
               </Link>
             )}
             <button

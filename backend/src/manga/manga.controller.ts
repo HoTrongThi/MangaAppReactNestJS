@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, Query, Logger } from '@nestjs/common';
 import { MangaService } from './manga.service';
 import { CreateMangaDto } from './dto/create-manga.dto';
 import { UpdateMangaDto } from './dto/update-manga.dto';
@@ -9,13 +9,31 @@ import { Role } from '../users/entities/user.entity';
 
 @Controller('manga')
 export class MangaController {
+  private readonly logger = new Logger(MangaController.name);
+
   constructor(private readonly mangaService: MangaService) {}
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN, Role.CONTRIBUTOR)
-  create(@Body() createMangaDto: CreateMangaDto, @Request() req) {
-    return this.mangaService.create(createMangaDto);
+  async create(@Body() createMangaDto: CreateMangaDto, @Request() req) {
+    this.logger.debug('=== Create Manga Request ===');
+    this.logger.debug(`Request headers: ${JSON.stringify(req.headers)}`);
+    this.logger.debug(`User from request: ${JSON.stringify(req.user)}`);
+    this.logger.debug(`User role: ${req.user?.role}`);
+    this.logger.debug(`Manga data: ${JSON.stringify(createMangaDto)}`);
+    
+    try {
+      const result = await this.mangaService.create({
+        ...createMangaDto,
+        userId: req.user.id
+      });
+      this.logger.debug(`Created manga: ${JSON.stringify(result)}`);
+      return result;
+    } catch (error) {
+      this.logger.error(`Error creating manga: ${error.message}`);
+      throw error;
+    }
   }
 
   @Get()
@@ -29,11 +47,6 @@ export class MangaController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.mangaService.findOne(+id);
-  }
-
-  @Get('mangadex/:mangaDexId')
-  findByMangaDexId(@Param('mangaDexId') mangaDexId: string) {
-    return this.mangaService.findByMangaDexId(mangaDexId);
   }
 
   @Patch(':id')

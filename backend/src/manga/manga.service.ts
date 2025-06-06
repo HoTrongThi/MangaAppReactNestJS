@@ -15,21 +15,33 @@ export class MangaService {
     private genreRepository: Repository<Genre>,
   ) {}
 
-  async create(createMangaDto: CreateMangaDto): Promise<Manga> {
-    // Check if mangaDexId already exists
-    const existingManga = await this.mangaRepository.findOne({
-      where: { mangaDexId: createMangaDto.mangaDexId },
+  async create(createMangaDto: CreateMangaDto & { userId: number }): Promise<Manga> {
+    const manga = this.mangaRepository.create({
+      title: createMangaDto.title,
+      description: createMangaDto.description,
+      author: createMangaDto.author,
+      status: createMangaDto.status,
+      coverFileName: createMangaDto.coverFileName,
+      userId: createMangaDto.userId,
+      source: createMangaDto.source || 'internal',
     });
 
-    if (existingManga) {
-      throw new BadRequestException('Manga with this MangaDex ID already exists');
-    }
+    // Handle genres
+    if (createMangaDto.genres && createMangaDto.genres.length > 0) {
+      const genres = await Promise.all(
+        createMangaDto.genres.map(async (genreName) => {
+          let genre = await this.genreRepository.findOne({
+            where: { name: genreName }
+          });
 
-    const manga = this.mangaRepository.create(createMangaDto);
+          if (!genre) {
+            genre = this.genreRepository.create({ name: genreName });
+            await this.genreRepository.save(genre);
+          }
 
-    // Handle genres if provided
-    if (createMangaDto.genreIds && createMangaDto.genreIds.length > 0) {
-      const genres = await this.genreRepository.findByIds(createMangaDto.genreIds);
+          return genre;
+        })
+      );
       manga.genres = genres;
     }
 
@@ -59,8 +71,21 @@ export class MangaService {
     const manga = await this.findOne(id);
 
     // Handle genres if provided
-    if (updateMangaDto.genreIds) {
-      const genres = await this.genreRepository.findByIds(updateMangaDto.genreIds);
+    if (updateMangaDto.genres) {
+      const genres = await Promise.all(
+        updateMangaDto.genres.map(async (genreName) => {
+          let genre = await this.genreRepository.findOne({
+            where: { name: genreName }
+          });
+
+          if (!genre) {
+            genre = this.genreRepository.create({ name: genreName });
+            await this.genreRepository.save(genre);
+          }
+
+          return genre;
+        })
+      );
       manga.genres = genres;
     }
 
@@ -77,24 +102,10 @@ export class MangaService {
     }
   }
 
-  async findByMangaDexId(mangaDexId: string): Promise<Manga> {
-    const manga = await this.mangaRepository.findOne({
-      where: { mangaDexId },
-      relations: ['genres', 'chapters'],
-    });
-
-    if (!manga) {
-      throw new NotFoundException('Manga not found');
-    }
-
-    return manga;
-  }
-
   async findByUserId(userId: number): Promise<Manga[]> {
-    return this.mangaRepository
-      .createQueryBuilder('manga')
-      .leftJoinAndSelect('manga.user', 'user')
-      .where('user.id = :userId', { userId })
-      .getMany();
+    return this.mangaRepository.find({
+      where: { userId },
+      relations: ['genres'],
+    });
   }
 } 

@@ -1,70 +1,49 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ConflictException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { User } from '../users/entities/user.entity';
+import { User, Role } from '../users/entities/user.entity';
 import { Comment } from '../comments/entities/comment.entity';
 import { Manga } from '../manga/entities/manga.entity';
 import { Chapter } from '../chapters/entities/chapter.entity';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { Role } from '../users/enums/role.enum';
+import { CommentsService } from '../comments/comments.service';
 
 @Injectable()
 export class AdminPanelService {
   constructor(
     @InjectRepository(User)
-    private userRepository: Repository<User>,
+    private usersRepository: Repository<User>,
     @InjectRepository(Comment)
     private commentRepository: Repository<Comment>,
     @InjectRepository(Manga)
     private mangaRepository: Repository<Manga>,
     @InjectRepository(Chapter)
     private chapterRepository: Repository<Chapter>,
+    private commentsService: CommentsService
   ) {}
 
   // Quản lý người dùng
-  async getAllUsers(page: number = 1, limit: number = 10) {
-    const [users, total] = await this.userRepository.findAndCount({
-      skip: (page - 1) * limit,
-      take: limit,
-      order: { created_at: 'DESC' },
-    });
-
-    return {
-      users,
-      total,
-      page,
-      totalPages: Math.ceil(total / limit),
-    };
+  async getAllUsers(): Promise<User[]> {
+    return this.usersRepository.find();
   }
 
-  async updateUser(userId: number, updateUserDto: UpdateUserDto) {
-    const user = await this.userRepository.findOne({ where: { id: userId } });
+  async updateUserRole(id: number, role: Role): Promise<User> {
+    const user = await this.usersRepository.findOneBy({ id });
+
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException(`User with ID ${id} not found`);
     }
 
-    // Không cho phép thay đổi role của admin khác
-    if (user.role === Role.ADMIN && updateUserDto.role !== Role.ADMIN) {
-      throw new Error('Cannot change role of another admin');
-    }
-
-    Object.assign(user, updateUserDto);
-    return this.userRepository.save(user);
+    user.role = role;
+    return this.usersRepository.save(user);
   }
 
-  async deleteUser(userId: number) {
-    const user = await this.userRepository.findOne({ where: { id: userId } });
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
+  async deleteUser(id: number): Promise<void> {
+    const result = await this.usersRepository.delete(id);
 
-    // Không cho phép xóa admin
-    if (user.role === Role.ADMIN) {
-      throw new Error('Cannot delete admin user');
+    if (result.affected === 0) {
+      throw new NotFoundException(`User with ID ${id} not found`);
     }
-
-    await this.userRepository.remove(user);
-    return { message: 'User deleted successfully' };
   }
 
   // Quản lý bình luận
@@ -94,60 +73,66 @@ export class AdminPanelService {
     return this.commentRepository.save(comment);
   }
 
-  async deleteComment(commentId: number) {
-    const comment = await this.commentRepository.findOne({ where: { id: commentId } });
-    if (!comment) {
-      throw new NotFoundException('Comment not found');
-    }
-
-    await this.commentRepository.remove(comment);
-    return { message: 'Comment deleted successfully' };
+  async deleteComment(commentId: number): Promise<void> {
+    await this.commentsService.remove(commentId, null);
   }
 
   // Quản lý truyện và chương
-  async getAllUserManga(page: number = 1, limit: number = 10) {
-    const [manga, total] = await this.mangaRepository.findAndCount({
+  async getAllInternalManga(): Promise<Manga[]> {
+    return this.mangaRepository.find({
       where: { source: 'internal' },
-      skip: (page - 1) * limit,
-      take: limit,
       relations: ['user'],
-      order: { created_at: 'DESC' },
     });
-
-    return {
-      manga,
-      total,
-      page,
-      totalPages: Math.ceil(total / limit),
-    };
   }
 
-  async deleteManga(mangaId: number) {
+  async getInternalMangaById(mangaId: number): Promise<Manga> {
     const manga = await this.mangaRepository.findOne({
       where: { id: mangaId, source: 'internal' },
+      relations: ['user', 'chapters'],
     });
     if (!manga) {
-      throw new NotFoundException('Manga not found');
+      throw new NotFoundException(`Internal Manga with ID ${mangaId} not found`);
     }
-
-    await this.mangaRepository.remove(manga);
-    return { message: 'Manga deleted successfully' };
+    return manga;
   }
 
-  async deleteChapter(chapterId: number) {
+  async updateInternalManga(mangaId: number, updateData: any): Promise<Manga> {
+    const manga = await this.getInternalMangaById(mangaId);
+    Object.assign(manga, updateData);
+    return this.mangaRepository.save(manga);
+  }
+
+  async deleteInternalManga(mangaId: number): Promise<void> {
+    const result = await this.mangaRepository.delete({ id: mangaId, source: 'internal' });
+    if (result.affected === 0) {
+      throw new NotFoundException(`Internal Manga with ID ${mangaId} not found or not internal`);
+    }
+  }
+
+  async getAllInternalChapters(mangaId: number): Promise<Chapter[]> {
+    return this.chapterRepository.find({
+      where: { manga: { id: mangaId, source: 'internal' } },
+      relations: ['manga'],
+    });
+  }
+
+  async deleteInternalChapter(chapterId: number, userId: number): Promise<void> {
     const chapter = await this.chapterRepository.findOne({
       where: { id: chapterId },
       relations: ['manga'],
     });
+
     if (!chapter) {
-      throw new NotFoundException('Chapter not found');
+      throw new NotFoundException(`Chapter with ID ${chapterId} not found`);
     }
 
     if (chapter.manga.source !== 'internal') {
-      throw new Error('Cannot delete chapter of non-internal manga');
+      throw new BadRequestException('Cannot delete chapters from external sources.');
     }
 
-    await this.chapterRepository.remove(chapter);
-    return { message: 'Chapter deleted successfully' };
+    const result = await this.chapterRepository.delete(chapterId);
+    if (result.affected === 0) {
+      throw new NotFoundException(`Chapter with ID ${chapterId} not found`);
+    }
   }
 } 

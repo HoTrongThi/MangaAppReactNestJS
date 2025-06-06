@@ -1,10 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToMany, JoinTable, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToMany, JoinTable, OneToMany, ManyToOne } from 'typeorm';
 import { Genre } from '../../genres/entities/genre.entity';
 import { Chapter } from '../../chapters/entities/chapter.entity';
 import { Bookmark } from '../../bookmarks/entities/bookmark.entity';
 import { History } from '../../history/entities/history.entity';
 import { Rating } from '../../ratings/entities/rating.entity';
 import { Comment } from '../../comments/entities/comment.entity';
+import { User } from '../../users/entities/user.entity';
 // Import other related entities like Chapter, Genre, etc. later
 
 @Entity('manga')
@@ -12,38 +13,23 @@ export class Manga {
   @PrimaryGeneratedColumn()
   id: number; // Internal ID
 
-  @Column({ type: 'varchar', length: 255, nullable: false })
-  mangaDexId: string; // ID từ MangaDex API
+  @Column({ type: 'varchar', length: 255 })
+  title: string;
 
-  @Column({ type: 'longtext', nullable: true }) // Store title in multiple languages
-  title: any; 
+  @Column({ type: 'text' })
+  description: string;
 
-  @Column({ type: 'longtext', nullable: true }) // Store description in multiple languages
-  description: any;
-
-  @Column({ type: 'varchar', length: 255, nullable: true }) // Store cover file name
-  coverFileName: string;
-
-  @Column({ type: 'varchar', length: 255, nullable: true })
+  @Column({ type: 'varchar', length: 255 })
   author: string;
 
-  @Column({ type: 'varchar', length: 255, nullable: true })
-  artist: string;
-
-  @Column({ type: 'varchar', length: 50, nullable: true })
+  @Column({ type: 'varchar', length: 50 })
   status: string;
 
-  @Column({ type: 'varchar', length: 50, nullable: true })
-  type: string;
+  @Column({ type: 'varchar', length: 255 })
+  coverFileName: string;
 
-  @Column({ type: 'varchar', length: 255, nullable: true })
+  @Column({ type: 'varchar', length: 50, default: 'internal' })
   source: string;
-
-  @Column({ type: 'varchar', length: 255, nullable: true })
-  source_id: string;
-
-  @Column({ type: 'longtext', nullable: true })
-  metadata: any;
 
   @CreateDateColumn()
   created_at: Date;
@@ -74,6 +60,12 @@ export class Manga {
 
   @OneToMany(() => Comment, comment => comment.manga)
   comments: Comment[];
+
+  @ManyToOne(() => User)
+  user: User;
+
+  @Column()
+  userId: number;
 
   // Add relationships to Chapter, Genre, etc. later
 } 

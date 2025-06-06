@@ -14,6 +14,7 @@ import { CommentsModule } from './comments/comments.module';
 import { ChaptersModule } from './chapters/chapters.module';
 import { ViewsModule } from './views/views.module';
 import { AdminPanelModule } from './admin-panel/admin-panel.module';
+import { ContributorPanelModule } from './contributor-panel/contributor-panel.module';
 import { User } from './users/entities/user.entity';
 import { Genre } from './genres/entities/genre.entity';
 import { Manga } from './manga/entities/manga.entity';
@@ -64,6 +65,7 @@ import { View } from './views/entities/view.entity';
     ChaptersModule,
     ViewsModule,
     AdminPanelModule,
+    ContributorPanelModule,
   ],
   controllers: [AppController],
   providers: [AppService],

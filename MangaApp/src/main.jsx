@@ -10,11 +10,15 @@ import { Login } from "./components/Auth/Login";
 import { Register } from "./components/Auth/Register";
 import { ReadingHistory } from "./components/ReadingHistory";
 import { Dashboard } from "./components/Admin/Dashboard";
+import AddMangaForm from "./components/Admin/AddMangaForm";
 import { PopularManga } from "./components/PopularManga";
 import { LatestManga } from "./components/LatestManga";
 import { MangaByTag } from "./components/MangaByTag";
+import { ContributorPanel } from "./pages/ContributorPanel";
 import { AuthProvider } from './contexts/AuthContext';
 import "./index.css";
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
@@ -34,7 +38,10 @@ ReactDOM.createRoot(document.getElementById("root")).render(
             <Route path="/register" element={<Register />} />
             <Route path="/history" element={<ReadingHistory />} />
             <Route path="/admin" element={<Dashboard />} />
+            <Route path="/admin/manga/new" element={<AddMangaForm />} />
+            <Route path="/contributor" element={<ContributorPanel />} />
           </Routes>
+          <ToastContainer />
         </AuthProvider>
       </BrowserRouter>
     </div>
