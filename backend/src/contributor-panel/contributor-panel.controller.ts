@@ -35,6 +35,12 @@ export class ContributorPanelController {
     return this.contributorPanelService.deleteMyManga(+id, req.user.id);
   }
 
+  // Add a new manga
+  @Post('manga')
+  createMyManga(@Body() createMangaDto: Partial<Manga>, @Request() req) {
+    return this.contributorPanelService.createMyManga(createMangaDto, req.user.id);
+  }
+
   // Chapter Management
   @Get('manga/:mangaId/chapters')
   getMyMangaChapters(@Param('mangaId') mangaId: string, @Request() req) {

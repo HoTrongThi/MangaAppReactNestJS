@@ -70,25 +70,6 @@ export class MangaService {
   async update(id: number, updateMangaDto: UpdateMangaDto): Promise<Manga> {
     const manga = await this.findOne(id);
 
-    // Handle genres if provided
-    if (updateMangaDto.genres) {
-      const genres = await Promise.all(
-        updateMangaDto.genres.map(async (genreName) => {
-          let genre = await this.genreRepository.findOne({
-            where: { name: genreName }
-          });
-
-          if (!genre) {
-            genre = this.genreRepository.create({ name: genreName });
-            await this.genreRepository.save(genre);
-          }
-
-          return genre;
-        })
-      );
-      manga.genres = genres;
-    }
-
     // Update other fields
     Object.assign(manga, updateMangaDto);
 

@@ -5,6 +5,7 @@ import { Manga } from '../manga/entities/manga.entity';
 import { Chapter } from '../chapters/entities/chapter.entity';
 import { CommentsService } from '../comments/comments.service';
 import { Comment } from '../comments/entities/comment.entity';
+import { MangaService } from '../manga/manga.service';
 
 @Injectable()
 export class ContributorPanelService {
@@ -15,6 +16,7 @@ export class ContributorPanelService {
     private chapterRepository: Repository<Chapter>,
     @InjectRepository(Comment)
     private commentRepository: Repository<Comment>,
+    private mangaService: MangaService,
   ) {}
 
   // Get all manga created by the contributor
@@ -183,5 +185,10 @@ export class ContributorPanelService {
 
     await this.commentRepository.remove(comment);
     return { message: 'Comment deleted successfully' };
+  }
+
+  // Add a new manga for the contributor (reuse admin logic)
+  async createMyManga(createMangaDto: any, userId: number) {
+    return this.mangaService.create({ ...createMangaDto, userId });
   }
 } 
