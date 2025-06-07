@@ -1,9 +1,10 @@
 import { IsNumber, IsNotEmpty } from 'class-validator';
+import { IsUUID } from 'class-validator';
 
 export class CreateHistoryDto {
-  @IsNumber()
+  @IsUUID()
   @IsNotEmpty()
-  mangaId: number;
+  mangaId: string;
 
   @IsNumber()
   @IsNotEmpty()

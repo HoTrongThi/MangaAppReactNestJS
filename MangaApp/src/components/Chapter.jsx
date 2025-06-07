@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { getChapter } from "../helpers/getChapter";
 import { Link } from "react-router-dom";
 
-export const Chapter = ({ id, title }) => {
+export const Chapter = ({ id, title, mangaId }) => {
   const [chapter, setChapter] = useState(false);
 
   const chapterData = async (id) => {
@@ -17,7 +17,12 @@ export const Chapter = ({ id, title }) => {
     <div className="w-full flex items-center p-1 border-2 rounded-md border-zinc-300 border-opacity-20">
       <Link
         to={`/manga/read/${title}${id}`}
-        state={id}
+        state={{ 
+          chapterId: id,
+          mangaId: mangaId,
+          chapterNumber: chapter?.chapter || 0,
+          mangaTitle: title
+        }}
         className="text-zinc-400 w-full flex gap-1 justify-start items-baseline"
       >
         <p className="text-slate-200 font-semibold lg:text-xl">Chapter: </p>

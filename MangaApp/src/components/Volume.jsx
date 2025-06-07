@@ -1,6 +1,6 @@
 import { Chapter } from "./Chapter";
 
-export const Volume = ({ volumen, title }) => {
+export const Volume = ({ volumen, title, mangaId }) => {
   const { volume, chapters } = volumen;
 
   const capitulos = Object.values(chapters).reverse();
@@ -13,7 +13,7 @@ export const Volume = ({ volumen, title }) => {
           : `Volume: ${volume}`}
       </h4>
       {capitulos.map((capitulo) => (
-        <Chapter key={capitulo.id} title={title} id={capitulo.id} />
+        <Chapter key={capitulo.id} title={title} id={capitulo.id} mangaId={mangaId} />
       ))}
       <hr key={volume.volume + "hr"} className="w-2/4 mt-4 pb-4 m-auto" />
     </div>

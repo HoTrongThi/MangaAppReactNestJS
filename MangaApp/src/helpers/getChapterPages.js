@@ -1,9 +1,20 @@
-export const getChapterPages = async (id) => {
-  const url = `https://api.mangadex.org/at-home/server/${id}`;
+export const getChapterPages = async (chapterId) => {
+  if (!chapterId) {
+    throw new Error('Chapter ID is required');
+  }
 
-  const respuesta = await fetch(url);
+  try {
+    const url = `https://api.mangadex.org/at-home/server/${chapterId}`;
+    const response = await fetch(url);
 
-  const data = await respuesta.json();
+    if (!response.ok) {
+      throw new Error(`Failed to fetch chapter pages: ${response.statusText}`);
+    }
 
-  return data;
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching chapter pages:', error);
+    throw error;
+  }
 };

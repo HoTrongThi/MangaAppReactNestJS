@@ -66,6 +66,7 @@ export const Manga = () => {
                 <Volume
                   key={volume.volume}
                   title={attributes.title.en}
+                  mangaId={data.id}
                   volumen={volume}
                 />
               ))}

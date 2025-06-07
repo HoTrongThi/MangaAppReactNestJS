@@ -8,7 +8,16 @@ export const useGetPages = () => {
   const [pages, setPages] = useState();
 
   const getPages = async () => {
-    setPages(await getChapterPages(state));
+    if (!state?.chapterId) {
+      console.error('No chapter ID provided');
+      return;
+    }
+    try {
+      const result = await getChapterPages(state.chapterId);
+      setPages(result);
+    } catch (error) {
+      console.error('Failed to fetch chapter pages:', error);
+    }
   };
 
   const { baseUrl, chapter } = !!pages && pages;
@@ -16,8 +25,7 @@ export const useGetPages = () => {
 
   useEffect(() => {
     getPages();
-    console.log(`width: ${window.innerWidth}`);
-  }, []);
+  }, [state?.chapterId]);
 
   return {
     baseUrl,

@@ -23,7 +23,7 @@ export class HistoryService {
       throw new NotFoundException('User not found');
     }
 
-    const manga = await this.mangaRepository.findOne({ where: { id: createHistoryDto.mangaId } });
+    const manga = await this.mangaRepository.findOne({ where: { mangaDexId: createHistoryDto.mangaId } });
     if (!manga) {
       throw new NotFoundException('Manga not found');
     }
@@ -32,7 +32,7 @@ export class HistoryService {
     let history = await this.historyRepository.findOne({
       where: {
         user: { id: userId },
-        manga: { id: createHistoryDto.mangaId },
+        manga: { id: manga.id },
       },
     });
 
