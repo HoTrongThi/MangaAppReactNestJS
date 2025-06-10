@@ -6,10 +6,14 @@ import { toast } from 'react-toastify';
 export const ContributorPanel = () => {
   const [user, setUser] = useState(null);
   const [mangas, setMangas] = useState([]);
+  const [comments, setComments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [editingManga, setEditingManga] = useState(null);
   const [isMangaModalOpen, setIsMangaModalOpen] = useState(false);
+  const [selectedManga, setSelectedManga] = useState(null);
+  const [chapters, setChapters] = useState([]);
+  const [isChaptersModalOpen, setIsChaptersModalOpen] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -21,13 +25,21 @@ export const ContributorPanel = () => {
       setUser(currentUser);
 
       if (currentUser && currentUser.token) {
-        // Fetch mangas
-        const mangaResponse = await axios.get('http://localhost:3001/api/manga', {
+        // Fetch contributor's mangas
+        const mangaResponse = await axios.get('http://localhost:3001/api/contributor/manga', {
           headers: {
             Authorization: `Bearer ${currentUser.token}`
           }
         });
         setMangas(mangaResponse.data);
+
+        // Fetch comments for contributor's mangas
+        const commentsResponse = await axios.get('http://localhost:3001/api/contributor/comments', {
+          headers: {
+            Authorization: `Bearer ${currentUser.token}`
+          }
+        });
+        setComments(commentsResponse.data);
       }
       setIsLoading(false);
     } catch (err) {
@@ -46,7 +58,7 @@ export const ContributorPanel = () => {
     if (window.confirm('Are you sure you want to delete this manga?')) {
       try {
         const currentUser = JSON.parse(localStorage.getItem('user'));
-        await axios.delete(`http://localhost:3001/api/manga/${mangaId}`, {
+        await axios.delete(`http://localhost:3001/api/contributor/manga/${mangaId}`, {
           headers: {
             Authorization: `Bearer ${currentUser.token}`
           }
@@ -64,7 +76,7 @@ export const ContributorPanel = () => {
     e.preventDefault();
     try {
       const currentUser = JSON.parse(localStorage.getItem('user'));
-      await axios.patch(`http://localhost:3001/api/manga/${editingManga.id}`, editingManga, {
+      await axios.put(`http://localhost:3001/api/contributor/manga/${editingManga.id}`, editingManga, {
         headers: {
           Authorization: `Bearer ${currentUser.token}`
         }
@@ -84,6 +96,60 @@ export const ContributorPanel = () => {
       ...prev,
       [name]: value
     }));
+  };
+
+  const handleViewChapters = async (manga) => {
+    try {
+      const currentUser = JSON.parse(localStorage.getItem('user'));
+      const response = await axios.get(`http://localhost:3001/api/contributor/manga/${manga.id}/chapters`, {
+        headers: {
+          Authorization: `Bearer ${currentUser.token}`
+        }
+      });
+      setChapters(response.data);
+      setSelectedManga(manga);
+      setIsChaptersModalOpen(true);
+    } catch (err) {
+      console.error('Error fetching chapters:', err);
+      toast.error('Failed to load chapters');
+    }
+  };
+
+  const handleDeleteChapter = async (mangaId, chapterId) => {
+    if (window.confirm('Are you sure you want to delete this chapter?')) {
+      try {
+        const currentUser = JSON.parse(localStorage.getItem('user'));
+        await axios.delete(`http://localhost:3001/api/contributor/manga/${mangaId}/chapters/${chapterId}`, {
+          headers: {
+            Authorization: `Bearer ${currentUser.token}`
+          }
+        });
+        toast.success('Chapter deleted successfully');
+        handleViewChapters(selectedManga); // Refresh chapters list
+      } catch (err) {
+        console.error('Error deleting chapter:', err);
+        toast.error('Failed to delete chapter');
+      }
+    }
+  };
+
+  // Comment handlers
+  const handleDeleteComment = async (mangaId, commentId) => {
+    if (window.confirm('Are you sure you want to delete this comment?')) {
+      try {
+        const currentUser = JSON.parse(localStorage.getItem('user'));
+        await axios.delete(`http://localhost:3001/api/contributor/manga/${mangaId}/comments/${commentId}`, {
+          headers: {
+            Authorization: `Bearer ${currentUser.token}`
+          }
+        });
+        toast.success('Comment deleted successfully');
+        fetchData();
+      } catch (err) {
+        console.error('Error deleting comment:', err);
+        toast.error('Failed to delete comment');
+      }
+    }
   };
 
   if (!user || user.role !== 'contributor') {
@@ -124,7 +190,8 @@ export const ContributorPanel = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Manga Management section */}
         <div className="bg-stone-900 p-4 rounded-lg">
           <h2 className="text-xl font-bold text-white mb-4">Manga Management</h2>
           <div className="space-y-4">
@@ -155,6 +222,12 @@ export const ContributorPanel = () => {
                         Edit
                       </button>
                       <button 
+                        onClick={() => handleViewChapters(manga)}
+                        className="px-3 py-1 bg-purple-600 text-white rounded hover:bg-purple-700"
+                      >
+                        Chapters
+                      </button>
+                      <button 
                         onClick={() => handleDeleteManga(manga.id)}
                         className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"
                       >
@@ -162,6 +235,37 @@ export const ContributorPanel = () => {
                       </button>
                     </div>
                   </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Comments Management section */}
+        <div className="bg-stone-900 p-4 rounded-lg">
+          <h2 className="text-xl font-bold text-white mb-4">Comments Management</h2>
+          <div className="space-y-4">
+            {comments.map((comment) => (
+              <div key={comment.id} className="bg-neutral-800 p-3 rounded-md">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h3 className="text-white font-semibold">{comment.user.username}</h3>
+                    <p className="text-gray-400">{comment.content}</p>
+                    <p className="text-gray-400 text-sm">Manga: {comment.manga.title}</p>
+                  </div>
+                  <span className={`px-2 py-1 rounded text-sm ${
+                    comment.isHidden ? 'bg-red-600' : 'bg-green-600'
+                  } text-white`}>
+                    {comment.isHidden ? 'Hidden' : 'Visible'}
+                  </span>
+                </div>
+                <div className="flex gap-2 mt-2">
+                  <button 
+                    onClick={() => handleDeleteComment(comment.manga.id, comment.id)}
+                    className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"
+                  >
+                    Delete
+                  </button>
                 </div>
               </div>
             ))}
@@ -203,7 +307,7 @@ export const ContributorPanel = () => {
                     value={editingManga.description}
                     onChange={handleMangaInputChange}
                     className="w-full p-2 rounded bg-neutral-700 text-white"
-                    rows="3"
+                    rows="4"
                   />
                 </div>
                 <div>
@@ -218,18 +322,8 @@ export const ContributorPanel = () => {
                     <option value="completed">Completed</option>
                   </select>
                 </div>
-                <div>
-                  <label className="block text-white mb-2">Cover Image URL</label>
-                  <input
-                    type="text"
-                    name="coverFileName"
-                    value={editingManga.coverFileName}
-                    onChange={handleMangaInputChange}
-                    className="w-full p-2 rounded bg-neutral-700 text-white"
-                  />
-                </div>
               </div>
-              <div className="flex justify-end gap-2 mt-6">
+              <div className="flex justify-end gap-2 mt-4">
                 <button
                   type="button"
                   onClick={() => setIsMangaModalOpen(false)}
@@ -245,6 +339,57 @@ export const ContributorPanel = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Chapters Modal */}
+      {isChaptersModalOpen && selectedManga && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-stone-900 p-6 rounded-lg w-full max-w-2xl">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold text-white">Chapters for {selectedManga.title}</h2>
+              <div className="flex gap-2">
+                <Link
+                  to={`/contributor/manga/${selectedManga.id}/chapters/new`}
+                  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                >
+                  Add New Chapter
+                </Link>
+                <button
+                  onClick={() => setIsChaptersModalOpen(false)}
+                  className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+            <div className="space-y-4 max-h-[60vh] overflow-y-auto">
+              {chapters.map((chapter) => (
+                <div key={chapter.id} className="bg-neutral-800 p-4 rounded-md">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h3 className="text-white font-semibold">Chapter {chapter.chapterNumber}</h3>
+                      <p className="text-gray-400">{chapter.title}</p>
+                    </div>
+                    <div className="flex gap-2">
+                      {/* <Link
+                        to={`/contributor/manga/${selectedManga.id}/chapters/${chapter.id}/edit`}
+                        className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+                      >
+                        Edit
+                      </Link> */}
+                      <button
+                        onClick={() => handleDeleteChapter(selectedManga.id, chapter.id)}
+                        className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}

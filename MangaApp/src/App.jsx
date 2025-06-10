@@ -10,6 +10,7 @@ import { Register } from './components/Auth/Register';
 import { ReadingHistory } from './components/ReadingHistory';
 import { Comments } from './components/Comments';
 import { Dashboard } from './components/Admin/Dashboard';
+import AddChapterForm from './components/Contributor/AddChapterForm';
 
 const App = () => {
   return (

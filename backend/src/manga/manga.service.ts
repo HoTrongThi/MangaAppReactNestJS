@@ -5,6 +5,7 @@ import { Manga } from './entities/manga.entity';
 import { CreateMangaDto } from './dto/create-manga.dto';
 import { UpdateMangaDto } from './dto/update-manga.dto';
 import { Genre } from '../genres/entities/genre.entity';
+import { ILike, Like } from 'typeorm';
 
 @Injectable()
 export class MangaService {
@@ -88,5 +89,25 @@ export class MangaService {
       where: { userId },
       relations: ['genres'],
     });
+  }
+
+  async searchManga(query: string): Promise<Manga[]> {
+    if (!query || typeof query !== 'string' || !query.trim()) {
+      return [];
+    }
+    try {
+      return await this.mangaRepository.find({
+        where: [
+          { title: Like(`%${query}%`) },
+          { author: Like(`%${query}%`) }
+        ].filter(condition => {
+          return Object.values(condition)[0] !== undefined && Object.values(condition)[0] !== null;
+        }),
+        relations: ['genres'],
+      });
+    } catch (error) {
+      console.error('Error in searchManga:', error);
+      return [];
+    }
   }
 } 

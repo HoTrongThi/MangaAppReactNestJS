@@ -1,9 +1,12 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Request, UseInterceptors, UploadedFiles } from '@nestjs/common';
 import { ContributorPanelService } from './contributor-panel.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ContributorGuard } from './guards/contributor.guard';
 import { Manga } from '../manga/entities/manga.entity';
 import { Chapter } from '../chapters/entities/chapter.entity';
+import { FilesInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
 
 @Controller('contributor')
 @UseGuards(JwtAuthGuard, ContributorGuard)
@@ -75,7 +78,39 @@ export class ContributorPanelController {
     return this.contributorPanelService.deleteChapter(+mangaId, +chapterId, req.user.id);
   }
 
+  @Post('manga/:mangaId/chapters/:chapterId/images')
+  @UseInterceptors(
+    FilesInterceptor('images', 50, {
+      storage: diskStorage({
+        destination: './uploads/chapters',
+        filename: (req, file, callback) => {
+          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+          callback(null, `${uniqueSuffix}${extname(file.originalname)}`);
+        },
+      }),
+      fileFilter: (req, file, callback) => {
+        if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
+          return callback(new Error('Only image files are allowed!'), false);
+        }
+        callback(null, true);
+      },
+    }),
+  )
+  async uploadChapterImages(
+    @Param('mangaId') mangaId: string,
+    @Param('chapterId') chapterId: string,
+    @UploadedFiles() files: Array<Express.Multer.File>,
+    @Request() req,
+  ) {
+    return this.contributorPanelService.uploadChapterImages(+mangaId, +chapterId, files, req.user.id);
+  }
+
   // Comment Management
+  @Get('comments')
+  getAllComments(@Request() req) {
+    return this.contributorPanelService.getAllComments(req.user.id);
+  }
+
   @Get('manga/:mangaId/comments')
   getMangaComments(@Param('mangaId') mangaId: string, @Request() req) {
     return this.contributorPanelService.getMangaComments(+mangaId, req.user.id);

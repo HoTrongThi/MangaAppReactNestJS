@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, Query, Logger } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, Query, Logger, BadRequestException } from '@nestjs/common';
 import { MangaService } from './manga.service';
 import { CreateMangaDto } from './dto/create-manga.dto';
 import { UpdateMangaDto } from './dto/update-manga.dto';
@@ -44,22 +44,39 @@ export class MangaController {
     return this.mangaService.findAll();
   }
 
+  @Get('search')
+  async searchManga(@Query('query') query: string) {
+    return this.mangaService.searchManga(query);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.mangaService.findOne(+id);
+    const numId = Number(id);
+    if (isNaN(numId)) {
+      throw new BadRequestException('Invalid id');
+    }
+    return this.mangaService.findOne(numId);
   }
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN, Role.CONTRIBUTOR)
   update(@Param('id') id: string, @Body() updateMangaDto: UpdateMangaDto) {
-    return this.mangaService.update(+id, updateMangaDto);
+    const numId = Number(id);
+    if (isNaN(numId)) {
+      throw new BadRequestException('Invalid id');
+    }
+    return this.mangaService.update(numId, updateMangaDto);
   }
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
   remove(@Param('id') id: string) {
-    return this.mangaService.remove(+id);
+    const numId = Number(id);
+    if (isNaN(numId)) {
+      throw new BadRequestException('Invalid id');
+    }
+    return this.mangaService.remove(numId);
   }
 } 

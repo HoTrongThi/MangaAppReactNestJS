@@ -42,7 +42,7 @@ export const ReadingHistory = () => {
       } catch (err) {
         console.error('Failed to fetch reading history:', err);
         setError('Failed to load history. Please try again later.');
-        setIsLoading(false);
+    setIsLoading(false);
       }
     };
 

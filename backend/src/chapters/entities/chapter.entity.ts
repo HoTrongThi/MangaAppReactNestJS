@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
 import { Manga } from '../../manga/entities/manga.entity';
 import { View } from '../../views/entities/view.entity';
+import { ChapterImage } from './chapter-image.entity';
 
 @Entity('chapters')
 export class Chapter {
@@ -43,4 +44,10 @@ export class Chapter {
 
   @OneToMany(() => View, view => view.chapter)
   views: View[];
+
+  @OneToMany(() => ChapterImage, image => image.chapter)
+  images: ChapterImage[];
+
+  @Column({ default: true })
+  isVisible: boolean;
 } 

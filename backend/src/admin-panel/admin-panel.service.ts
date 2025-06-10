@@ -73,8 +73,14 @@ export class AdminPanelService {
     return this.commentRepository.save(comment);
   }
 
-  async deleteComment(commentId: number): Promise<void> {
-    await this.commentsService.remove(commentId, null);
+  async deleteComment(commentId: number) {
+    const comment = await this.commentRepository.findOne({ where: { id: commentId } });
+    if (!comment) {
+      throw new NotFoundException('Comment not found');
+    }
+
+    await this.commentRepository.remove(comment);
+    return { message: 'Comment deleted successfully' };
   }
 
   // Quản lý truyện và chương

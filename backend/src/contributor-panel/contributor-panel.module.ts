@@ -5,12 +5,13 @@ import { ContributorPanelService } from './contributor-panel.service';
 import { Manga } from '../manga/entities/manga.entity';
 import { Chapter } from '../chapters/entities/chapter.entity';
 import { Comment } from '../comments/entities/comment.entity';
+import { ChapterImage } from '../chapters/entities/chapter-image.entity';
 import { CommentsModule } from '../comments/comments.module';
 import { MangaModule } from '../manga/manga.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Manga, Chapter, Comment]),
+    TypeOrmModule.forFeature([Manga, Chapter, Comment, ChapterImage]),
     CommentsModule,
     MangaModule,
   ],

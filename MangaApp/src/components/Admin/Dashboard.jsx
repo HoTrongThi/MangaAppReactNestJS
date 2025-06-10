@@ -7,12 +7,20 @@ export const Dashboard = () => {
   const [user, setUser] = useState(null);
   const [mangas, setMangas] = useState([]);
   const [users, setUsers] = useState([]);
+  const [comments, setComments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [editingManga, setEditingManga] = useState(null);
   const [editingUser, setEditingUser] = useState(null);
   const [isMangaModalOpen, setIsMangaModalOpen] = useState(false);
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
+  const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
+  const [newAdmin, setNewAdmin] = useState({
+    username: '',
+    email: '',
+    password: '',
+    role: 'admin'
+  });
 
   useEffect(() => {
     fetchData();
@@ -33,12 +41,20 @@ export const Dashboard = () => {
         setMangas(mangaResponse.data);
 
         // Fetch users
-        const usersResponse = await axios.get('http://localhost:3001/api/users', {
+        const usersResponse = await axios.get('http://localhost:3001/api/admin/users', {
           headers: {
             Authorization: `Bearer ${currentUser.token}`
           }
         });
         setUsers(usersResponse.data);
+
+        // Fetch comments
+        const commentsResponse = await axios.get('http://localhost:3001/api/admin/comments', {
+          headers: {
+            Authorization: `Bearer ${currentUser.token}`
+          }
+        });
+        setComments(commentsResponse.data.comments);
       }
       setIsLoading(false);
     } catch (err) {
@@ -108,7 +124,7 @@ export const Dashboard = () => {
     if (window.confirm('Are you sure you want to delete this user?')) {
       try {
         const currentUser = JSON.parse(localStorage.getItem('user'));
-        await axios.delete(`http://localhost:3001/api/users/${userId}`, {
+        await axios.delete(`http://localhost:3001/api/admin/users/${userId}`, {
           headers: {
             Authorization: `Bearer ${currentUser.token}`
           }
@@ -126,7 +142,7 @@ export const Dashboard = () => {
     e.preventDefault();
     try {
       const currentUser = JSON.parse(localStorage.getItem('user'));
-      await axios.patch(`http://localhost:3001/api/users/${editingUser.id}`, editingUser, {
+      await axios.patch(`http://localhost:3001/api/admin/users/${editingUser.id}`, editingUser, {
         headers: {
           Authorization: `Bearer ${currentUser.token}`
         }
@@ -143,6 +159,58 @@ export const Dashboard = () => {
   const handleUserInputChange = (e) => {
     const { name, value } = e.target;
     setEditingUser(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  // Comment handlers
+  const handleDeleteComment = async (commentId) => {
+    if (window.confirm('Are you sure you want to delete this comment?')) {
+      try {
+        const currentUser = JSON.parse(localStorage.getItem('user'));
+        await axios.delete(`http://localhost:3001/api/admin/comments/${commentId}`, {
+          headers: {
+            Authorization: `Bearer ${currentUser.token}`
+          }
+        });
+        toast.success('Comment deleted successfully');
+        fetchData();
+      } catch (err) {
+        console.error('Error deleting comment:', err);
+        toast.error('Failed to delete comment');
+      }
+    }
+  };
+
+  // Admin handlers
+  const handleCreateAdmin = async (e) => {
+    e.preventDefault();
+    try {
+      const currentUser = JSON.parse(localStorage.getItem('user'));
+      await axios.post('http://localhost:3001/api/users', newAdmin, {
+        headers: {
+          Authorization: `Bearer ${currentUser.token}`
+        }
+      });
+      toast.success('Admin account created successfully');
+      setIsAdminModalOpen(false);
+      setNewAdmin({
+        username: '',
+        email: '',
+        password: '',
+        role: 'admin'
+      });
+      fetchData();
+    } catch (err) {
+      console.error('Error creating admin:', err);
+      toast.error('Failed to create admin account');
+    }
+  };
+
+  const handleAdminInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewAdmin(prev => ({
       ...prev,
       [name]: value
     }));
@@ -177,6 +245,12 @@ export const Dashboard = () => {
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-white">Admin Dashboard</h1>
         <div className="flex gap-4">
+          <button
+            onClick={() => setIsAdminModalOpen(true)}
+            className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700"
+          >
+            Add Admin Account
+          </button>
           <Link
             to="/admin/manga/new"
             className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
@@ -186,7 +260,7 @@ export const Dashboard = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-stone-900 p-4 rounded-lg">
           <h2 className="text-xl font-bold text-white mb-4">Manga Management</h2>
           <div className="space-y-4">
@@ -264,8 +338,97 @@ export const Dashboard = () => {
               </div>
             ))}
           </div>
+        </div>
+
+        <div className="bg-stone-900 p-4 rounded-lg">
+          <h2 className="text-xl font-bold text-white mb-4">Comments Management</h2>
+          <div className="space-y-4">
+            {comments.map((comment) => (
+              <div key={comment.id} className="bg-neutral-800 p-3 rounded-md">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h3 className="text-white font-semibold">{comment.user.username}</h3>
+                    <p className="text-gray-400">{comment.content}</p>
+                    <p className="text-gray-400 text-sm">Manga: {comment.manga.title}</p>
+                  </div>
+                  <span className={`px-2 py-1 rounded text-sm ${
+                    comment.isHidden ? 'bg-red-600' : 'bg-green-600'
+                  } text-white`}>
+                    {comment.isHidden ? 'Hidden' : 'Visible'}
+                  </span>
+                </div>
+                <div className="flex gap-2 mt-2">
+                  <button 
+                    onClick={() => handleDeleteComment(comment.id)}
+                    className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
+      </div>
+
+      {/* Admin Modal */}
+      {isAdminModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-stone-900 p-6 rounded-lg w-96">
+            <h2 className="text-xl font-bold text-white mb-4">Create Admin Account</h2>
+            <form onSubmit={handleCreateAdmin}>
+              <div className="mb-4">
+                <label className="block text-white mb-2">Username</label>
+                <input
+                  type="text"
+                  name="username"
+                  value={newAdmin.username}
+                  onChange={handleAdminInputChange}
+                  className="w-full p-2 rounded bg-neutral-800 text-white border border-gray-700"
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-white mb-2">Email</label>
+                <input
+                  type="email"
+                  name="email"
+                  value={newAdmin.email}
+                  onChange={handleAdminInputChange}
+                  className="w-full p-2 rounded bg-neutral-800 text-white border border-gray-700"
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-white mb-2">Password</label>
+                <input
+                  type="password"
+                  name="password"
+                  value={newAdmin.password}
+                  onChange={handleAdminInputChange}
+                  className="w-full p-2 rounded bg-neutral-800 text-white border border-gray-700"
+                  required
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsAdminModalOpen(false)}
+                  className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700"
+                >
+                  Create
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Manga Edit Modal */}
       {isMangaModalOpen && editingManga && (

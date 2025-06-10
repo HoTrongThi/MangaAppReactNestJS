@@ -17,7 +17,7 @@ export const LibraryItem = ({ manga }) => {
     <Link
       key={id} // Key is actually applied in the map in LibraryPage
       to={mangaLinkTo}
-      state={id} // Pass MangaDex ID via state
+      state={{ id: `api-${id}`, source: 'api', rawId: id }}
       className="flex flex-col bg-stone-900 rounded-lg overflow-hidden hover:bg-stone-800 transition-colors"
     >
       {/* Removed per-item loading spinner */}

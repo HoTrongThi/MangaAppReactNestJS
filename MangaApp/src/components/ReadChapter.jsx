@@ -13,7 +13,7 @@ const api = axios.create({
 });
 
 export const ReadChapter = () => {
-  const { baseUrl, data, hash } = useGetPages();
+  const { baseUrl, data, hash, databaseChapter } = useGetPages();
   const { state } = useLocation();
   const navigate = useNavigate();
   const { mangaId, chapterId, chapterNumber, pageNumber: initialPageNumber } = state || {};
@@ -26,7 +26,7 @@ export const ReadChapter = () => {
 
   // Check if we have the required state
   useEffect(() => {
-    if (!state?.chapterId || !state?.mangaId) {
+    if (!state?.chapterId) {
       setError('Missing required chapter information');
       return;
     }
@@ -163,6 +163,29 @@ export const ReadChapter = () => {
     return (
       <div className="flex justify-center items-center w-full h-screen bg-neutral-800">
         <div className="loading w-8 h-8 border-8 rounded-full border-t-slate-900 animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (databaseChapter) {
+    // Hiển thị chapter từ database
+    return (
+      <div className="flex flex-col items-center w-full h-screen bg-neutral-800 overflow-auto">
+        <h2 className="text-white text-2xl font-bold mt-4 mb-2">Chapter {databaseChapter.chapterNumber}: {databaseChapter.title}</h2>
+        <div className="flex flex-col items-center w-full">
+          {databaseChapter.images && databaseChapter.images.length > 0 ? (
+            databaseChapter.images.map((img, idx) => (
+              <img
+                key={idx}
+                src={img.imageUrl.startsWith('http') ? img.imageUrl : `/uploads/chapters/${img.imageUrl}`}
+                alt={`Page ${idx + 1}`}
+                className="my-2 max-w-full max-h-[80vh] rounded shadow"
+              />
+            ))
+          ) : (
+            <div className="text-gray-400">No images for this chapter.</div>
+          )}
+        </div>
       </div>
     );
   }

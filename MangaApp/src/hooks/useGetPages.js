@@ -13,8 +13,15 @@ export const useGetPages = () => {
       return;
     }
     try {
-      const result = await getChapterPages(state.chapterId);
-      setPages(result);
+      if (state?.source === 'database') {
+        // Lấy chapter từ backend
+        const res = await fetch(`http://localhost:3001/api/chapters/id/${state.chapterId}`);
+        const chapter = await res.json();
+        setPages({ databaseChapter: chapter });
+      } else {
+        const result = await getChapterPages(state.chapterId);
+        setPages(result);
+      }
     } catch (error) {
       console.error('Failed to fetch chapter pages:', error);
     }
@@ -31,5 +38,6 @@ export const useGetPages = () => {
     baseUrl,
     data,
     hash,
+    databaseChapter: pages?.databaseChapter,
   };
 };

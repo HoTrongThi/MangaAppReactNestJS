@@ -31,7 +31,7 @@ export const PopularManga = () => {
     return (
       <Link
         to={`/manga/${manga.attributes.title.en}`}
-        state={manga.id}
+        state={{ id: `api-${manga.id}`, source: 'api', rawId: manga.id }}
         className="flex flex-col w-48 bg-stone-900 rounded-lg overflow-hidden hover:bg-stone-800 transition-colors"
       >
         <img

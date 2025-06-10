@@ -38,7 +38,7 @@ export const Home = () => {
     return (
       <Link
         to={`/manga/${manga.attributes.title.en}`}
-        state={manga.id}
+        state={{ id: `api-${manga.id}`, source: 'api', rawId: manga.id }}
         className="group relative flex flex-col bg-stone-900/70 rounded-lg overflow-hidden hover:bg-stone-800/70 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl"
       >
         <div className="relative overflow-hidden">

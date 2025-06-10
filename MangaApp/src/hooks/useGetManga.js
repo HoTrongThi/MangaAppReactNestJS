@@ -5,6 +5,7 @@ import { useLocation } from "react-router-dom";
 
 export const useGetManga = () => {
   const { state } = useLocation();
+  const { id, source, rawId } = state || {};
 
   const [mangaData, setMangaData] = useState();
   const [chapterList, setChapterList] = useState();
@@ -18,8 +19,15 @@ export const useGetManga = () => {
     `https://mangadex.org/covers/${data.id}/${relationships[2].attributes.fileName}`;
 
   const getManga = async () => {
-    setMangaData(await getMangaById(state));
-    setChapterList(Object.values(await getChapterList(state)).reverse());
+    if (source === 'database') {
+      const response = await fetch(`http://localhost:3001/api/manga/${rawId}`);
+      const data = await response.json();
+      setMangaData({ data });
+      setChapterList(data.chapters || []);
+    } else {
+      setMangaData(await getMangaById(rawId, source));
+      setChapterList(Object.values(await getChapterList(rawId, source)).reverse());
+    }
   };
 
   useEffect(() => {
@@ -27,10 +35,10 @@ export const useGetManga = () => {
   }, []);
 
   useEffect(() => {
-    if (mangaData && attributes && chapterList) {
+    if ((source === 'database' && mangaData) || (attributes && chapterList)) {
       setIsLoaded(true);
     }
-  }, [mangaData, attributes, chapterList]);
+  }, [mangaData, attributes, chapterList, source]);
 
   return {
     isLoaded,
@@ -40,5 +48,6 @@ export const useGetManga = () => {
     relationships,
     data,
     chapterList,
+    source,
   };
 };

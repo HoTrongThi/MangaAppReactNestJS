@@ -16,6 +16,7 @@ import { LatestManga } from "./components/LatestManga";
 import { MangaByTag } from "./components/MangaByTag";
 import { ContributorPanel } from "./components/Contributor/ContributorPanel";
 import ContributorAddMangaForm from "./components/Contributor/AddMangaForm";
+import AddChapterForm from "./components/Contributor/AddChapterForm";
 import { AuthProvider } from './contexts/AuthContext';
 import "./index.css";
 import { ToastContainer } from 'react-toastify';
@@ -43,6 +44,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
             <Route path="/admin/manga/new" element={<AddMangaForm />} />
             <Route path="/contributor" element={<ContributorPanel />} />
             <Route path="/contributor/manga/new" element={<ContributorAddMangaForm />} />
+            <Route path="/contributor/manga/:mangaId/chapters/new" element={<AddChapterForm />} />
             <Route path="/library" element={<LibraryPage />} />
           </Routes>
           <ToastContainer />

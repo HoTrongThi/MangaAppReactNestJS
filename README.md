@@ -46,6 +46,7 @@ npm run start:dev
 # Production
 npm run start:prod
 ```
+6. Cấu hình VPN cho IDE đang dùng hoặc chạy ứng dụng VPN bất kỳ
 
 ### Frontend (React)
 

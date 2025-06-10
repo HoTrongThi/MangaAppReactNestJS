@@ -16,13 +16,13 @@ export const MangaSearchResult = ({ attr }) => {
         className={`flex flex-col text-white h-auto w-32 ${
           !isLoaded && "hidden"
         }`}
-        state={id}
+        state={{ id, source: attr.source, rawId: id.replace(/^(db-|api-)/, '') }}
       >
         <img
           onLoad={() => {
             setIsLoaded(true);
           }}
-          src={`${cover}.512.jpg`}
+          src={attr.source === 'database' ? cover : `${cover}.512.jpg`}
           alt={`${title} cover`}
           className="h-auto w-min border-2 border-gray-400 p-1 rounded-md"
         />

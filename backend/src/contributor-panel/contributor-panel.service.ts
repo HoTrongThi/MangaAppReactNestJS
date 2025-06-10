@@ -6,6 +6,8 @@ import { Chapter } from '../chapters/entities/chapter.entity';
 import { CommentsService } from '../comments/comments.service';
 import { Comment } from '../comments/entities/comment.entity';
 import { MangaService } from '../manga/manga.service';
+import { In } from 'typeorm';
+import { ChapterImage } from '../chapters/entities/chapter-image.entity';
 
 @Injectable()
 export class ContributorPanelService {
@@ -16,6 +18,8 @@ export class ContributorPanelService {
     private chapterRepository: Repository<Chapter>,
     @InjectRepository(Comment)
     private commentRepository: Repository<Comment>,
+    @InjectRepository(ChapterImage)
+    private chapterImageRepository: Repository<ChapterImage>,
     private mangaService: MangaService,
   ) {}
 
@@ -190,5 +194,52 @@ export class ContributorPanelService {
   // Add a new manga for the contributor (reuse admin logic)
   async createMyManga(createMangaDto: any, userId: number) {
     return this.mangaService.create({ ...createMangaDto, userId });
+  }
+
+  async getAllComments(userId: number) {
+    // Get all manga IDs that belong to this contributor
+    const mangas = await this.mangaRepository.find({
+      where: { user: { id: userId } },
+      select: ['id']
+    });
+
+    const mangaIds = mangas.map(manga => manga.id);
+
+    // Get all comments for these mangas
+    return this.commentRepository.find({
+      where: { manga: { id: In(mangaIds) } },
+      relations: ['user', 'manga'],
+      order: { createdAt: 'DESC' }
+    });
+  }
+
+  async uploadChapterImages(mangaId: number, chapterId: number, files: any[], userId: number) {
+    const manga = await this.mangaRepository.findOne({
+      where: { id: mangaId, user: { id: userId } },
+    });
+
+    if (!manga) {
+      throw new NotFoundException('Manga not found');
+    }
+
+    const chapter = await this.chapterRepository.findOne({
+      where: { id: chapterId, manga: { id: mangaId } },
+    });
+
+    if (!chapter) {
+      throw new NotFoundException('Chapter not found');
+    }
+
+    const chapterImages = files.map((file, index) => {
+      return this.chapterImageRepository.create({
+        chapter: { id: chapterId },
+        imageUrl: file.filename,
+        order: index + 1,
+      });
+    });
+
+    await this.chapterImageRepository.save(chapterImages);
+
+    return { message: 'Images uploaded successfully', images: chapterImages };
   }
 } 

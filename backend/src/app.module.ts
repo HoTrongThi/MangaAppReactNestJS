@@ -24,6 +24,7 @@ import { History } from './history/entities/history.entity';
 import { Rating } from './ratings/entities/rating.entity';
 import { Comment } from './comments/entities/comment.entity';
 import { View } from './views/entities/view.entity';
+import { ChapterImage } from './chapters/entities/chapter-image.entity';
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { View } from './views/entities/view.entity';
           Rating,
           Comment,
           View,
+          ChapterImage,
         ],
         synchronize: configService.get('NODE_ENV') !== 'production',
       }),
