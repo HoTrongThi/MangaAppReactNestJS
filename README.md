@@ -115,15 +115,3 @@ npm run test
 # Run tests in watch mode
 npm run test:watch
 ```
-
-## Contributing
-
-1. Fork project
-2. Tạo branch mới (`git checkout -b feature/AmazingFeature`)
-3. Commit changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to branch (`git push origin feature/AmazingFeature`)
-5. Tạo Pull Request
-
-## License
-
-Project này được phân phối dưới giấy phép MIT. Xem file `LICENSE` để biết thêm chi tiết. 
